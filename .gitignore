@@ -1,0 +1,8 @@
+﻿.idea
+rookies-oneteam/gradle
+*.gradle
+*.bat
+rookies-oneteam/gradlew
+rookies-oneteam/.gitattributes
+rookies-oneteam/src/test
+rookies-oneteam/src/main/resources
