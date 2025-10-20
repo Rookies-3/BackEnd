@@ -1,6 +1,8 @@
 package com.store.rookiesoneteam.config;
 
 import com.store.rookiesoneteam.component.JwtAuthenticationFilter;
+import com.store.rookiesoneteam.component.OAuth2AuthenticationSuccessHandler;
+import com.store.rookiesoneteam.service.CustomOAuth2UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -25,59 +27,55 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
     @Autowired
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CustomOAuth2UserService customOAuth2UserService, OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) throws Exception {
-        http.httpBasic(AbstractHttpConfigurer::disable) // basic authentication filter 비활성화
+        http.httpBasic(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable) // csrf 비활성화
-                // 세션을 사용하지 않는 Stateless 방식으로 설정
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Spring Security의 필터체인은 순차적으로 검사하므로 아래 순서를 지켜야 함.
-                        // 1. 인증 없이 접근 가능한 경로
-                        .requestMatchers("/api/auth/login","/api/users/signup", "/api/auth/reset", "/api/auth/forget").permitAll()
+                        // 1. 공개할 경로들을 먼저 지정
                         .requestMatchers(
-                                "/swagger-ui.html",
+                                "/oauth2/**",
+                                "/login/oauth2/code/**",
+                                "/api/auth/login",
+                                "/api/users/signup",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/error"
                         ).permitAll()
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                        .requestMatchers("/api/auth/change").authenticated()
-                        // 2. 나머지 /api/users/**는 인증 필요
-                        .requestMatchers("/api/users/**").authenticated()
-                        // 3. 관리자 전용
-                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN")
-                        // 에러 허용
-                        .requestMatchers("/error").permitAll()
-                        // 5. 그 외 모든 요청 인증 필요
+                        // 2. 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                // spring security6 부턴 람다 스타일로 authenticationManager 설정
-                .authenticationProvider(authenticationProvider(userDetailsService, passwordEncoder));
+                .authenticationProvider(authenticationProvider(userDetailsService, passwordEncoder))
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                );
 
         return http.build();
     }
 
-    // (프론트엔드 개발 서버: http://localhost:5173)에서의 요청을 허용
-    // 허용 메소드 : GET, POST, PUT, DELETE, PATCH, OPTIONS
-    // * - 허용 헤더: 모든 헤더("*")
-    // * - 자격 증명(쿠키, 인증 헤더 등) 포함 요청 허용
-    // * - 모든 경로("/**")에 대해 위 설정 적용
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:8080"));
-        //테스트용
-        //configuration.setAllowedOrigins(List.of("*")); // 모든 Origin 허용
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -87,7 +85,6 @@ public class SecurityConfig {
         return source;
     }
 
-    // Spring security6 부터는 DaoAuthenticationProvider#setUserDetailsService(...) 메서드가 Deprecated되어 생성자에서 바로 주입받는 방식으로 바뀜.
     @Bean
     public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);

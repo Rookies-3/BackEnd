@@ -1,5 +1,6 @@
 package com.store.rookiesoneteam.domain.entity;
 
+import com.store.rookiesoneteam.domain.enums.SocialType;
 import com.store.rookiesoneteam.domain.enums.UserRole;
 import com.store.rookiesoneteam.domain.enums.UserStatus;
 import jakarta.persistence.*;
@@ -14,13 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-
-/**
- * @author  백두현
- * @version 1.0
- * @since   2025-10-19
- * @description UserDetails를 구현한 User 엔티티.
- */
 
 @Table(name = "users")
 @Entity
@@ -40,13 +34,13 @@ public class User implements UserDetails {
     @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 11)
+    @Column(unique = true, length = 11)
     private String phone;
 
     @Column(nullable = false, length = 150)
     private String password;
 
-    @Column(nullable = true, length = 50)
+    @Column(length = 50)
     private String nickname;
 
     @Column(nullable = false, unique = true, length = 100)
@@ -60,10 +54,14 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private UserStatus status;
 
-    // TODO BaseTimeEntity로 공통 시간 필드 분리 예정, auditing은 안해주기에 서비스 단에서 업데이트
+    @Enumerated(EnumType.STRING)
+    private SocialType socialType;
+
+    private String socialId;
+
     private LocalDateTime lastLogin;
     private LocalDateTime deleted;
-    private LocalDateTime approvedAt; // status에 따른 승인일자
+    private LocalDateTime approvedAt;
 
     @CreatedDate
     private LocalDateTime created;
@@ -101,7 +99,6 @@ public class User implements UserDetails {
         this.approvedAt = LocalDateTime.now();
     }
 
-    // TODO 사용자 마지막 로그인 1년 후 자동 비활성화시키기
     public void updateLastLoginTime() {
         this.lastLogin = LocalDateTime.now();
     }
