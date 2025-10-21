@@ -34,7 +34,7 @@ public class UserMapper {
     public User toEntity(UserDTO.Request dto, PasswordEncoder passwordEncoder) {
         return User.builder()
                 .username(dto.getUsername())
-                .name(dto.getUsername())
+                .name(dto.getName())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .phone(dto.getPhone())
                 .nickname(dto.getNickname())
