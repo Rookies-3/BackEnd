@@ -73,6 +73,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDTO.Response signup(UserDTO.Request request) {
+        if(userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+        }
+
+        if(userRepository.existsByNickname(request.getNickname())) {
+            throw new IllegalArgumentException("이미 존재하는 이름입니다.");
+        }
+
         User user = userMapper.toEntity(request, passwordEncoder);
         User saved = userRepository.save(user);
 

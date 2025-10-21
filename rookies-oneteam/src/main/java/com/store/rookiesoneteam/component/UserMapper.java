@@ -1,6 +1,8 @@
 package com.store.rookiesoneteam.component;
 
 import com.store.rookiesoneteam.domain.entity.User;
+import com.store.rookiesoneteam.domain.enums.UserRole;
+import com.store.rookiesoneteam.domain.enums.UserStatus;
 import com.store.rookiesoneteam.dto.UserDTO;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -32,13 +34,13 @@ public class UserMapper {
     public User toEntity(UserDTO.Request dto, PasswordEncoder passwordEncoder) {
         return User.builder()
                 .username(dto.getUsername())
-                .name(dto.getName())
+                .name(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .phone(dto.getPhone())
                 .nickname(dto.getNickname())
                 .email(dto.getEmail())
-                .role(dto.getRole())
-                .status(dto.getStatus())
+                .role(UserRole.USER)
+                .status(UserStatus.ACTIVE)
                 .lastLogin(dto.getLastLogin())
                 .deleted(dto.getDeleted())
                 .approvedAt(dto.getApprovedAt())

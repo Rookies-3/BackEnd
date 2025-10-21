@@ -34,7 +34,7 @@ public class UserController {
         return ResponseEntity.ok(userService.findUser(username));
     }
 
-    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다. 가입 시 상태는 'PENDING'이 됩니다.")
+    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다. 가입 시 상태는 'ACTIVE'가 됩니다.")
     @PostMapping("/signup")
     public ResponseEntity<UserDTO.Response> signupUser(@RequestBody UserDTO.Request userDTO) {
         return ResponseEntity.ok(userService.signup(userDTO));

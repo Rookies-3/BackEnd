@@ -75,8 +75,7 @@ public class LoginServiceImpl implements LoginService {
                     String reason = "";
                     switch (user.getRole()) {
                         case ADMIN -> reason = "login - 관리자";
-                        case USER1 -> reason = "login - 사용자 첫번째 유형";
-                        case USER2 -> reason = "login - 사용자 두번째 유형";
+                        case USER -> reason = "login - 사용자 유형";
                     }
 
 //                    recordAttempt(user.getUsername(), true, reason, request);

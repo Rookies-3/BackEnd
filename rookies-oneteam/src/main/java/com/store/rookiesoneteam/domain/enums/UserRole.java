@@ -5,8 +5,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum UserRole {
     ADMIN("관리자"),
-    USER1("사용자유형1"),
-    USER2("사용자유형2");
+    USER("사용자유형");
 
     private final String description;
 }

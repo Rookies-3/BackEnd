@@ -50,7 +50,7 @@ public class OAuthAttributes {
                 .name(name)
                 .email(email)
                 .nickname(nickname)
-                .role(UserRole.USER1) // 기본 권한
+                .role(UserRole.USER) // 기본 권한
                 .status(UserStatus.ACTIVE) // 기본 상태
                 .socialType(socialType)
                 .socialId(socialId)
