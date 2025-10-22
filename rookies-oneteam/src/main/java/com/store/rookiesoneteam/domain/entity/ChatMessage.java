@@ -29,8 +29,7 @@ public class ChatMessage {
     @Column(nullable = false)
     private String sender;
 
-    // 오라클 DB에서 긴 텍스트를 저장하기 위해 CLOB 타입 사용
-    @Column(nullable = false, columnDefinition = "CLOB")
+    @Column(nullable = false)
     private String message;
 
     @CreatedDate
