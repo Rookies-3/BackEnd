@@ -1,7 +1,6 @@
 package com.store.rookiesoneteam.repository;
 
 import com.store.rookiesoneteam.domain.entity.User;
-import com.store.rookiesoneteam.domain.enums.SocialType;
 import com.store.rookiesoneteam.domain.enums.UserRole;
 import com.store.rookiesoneteam.domain.enums.UserStatus;
 import org.springframework.data.domain.Page;
@@ -25,6 +24,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 닉네임 존재 여부 확인
     boolean existsByNickname(String nickname);
 
+    // 아이디(username) 존재 여부 확인
+    boolean existsByUsername(String username);
+
     // 상태 별 유저의 이메일이나 이름으로 확인
     List<User> findByStatusAndUsernameOrEmail(UserStatus status, String username, String email);
 
@@ -38,7 +40,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 상태 및 역할 별 사용자 조회 페이징
     Page<User> findAllByStatusAndRole(UserStatus status, UserRole role, Pageable pageable);
-
-    // 소셜 타입과 소셜의 식별값으로 사용자를 찾는 메소드
-    Optional<User> findBySocialTypeAndSocialId(SocialType socialType, String socialId);
 }
