@@ -79,7 +79,8 @@ public class ChatServiceImpl implements ChatService {
 
         ChatRoom chatRoom = ChatRoom.builder()
                 .user(user)
-                .roomName(requestDto.getRoomName())
+                .roomName("테스트 방")
+                //.roomName(requestDto.getRoomName())
                 .build();
 
         ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);

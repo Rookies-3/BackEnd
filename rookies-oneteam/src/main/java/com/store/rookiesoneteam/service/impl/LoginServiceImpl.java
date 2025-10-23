@@ -34,15 +34,24 @@ public class LoginServiceImpl implements LoginService {
     public LoginDTO.Response login(LoginDTO.Request dto, HttpServletRequest request) {
         // 사용자 조회
         User user = userRepository.findByUsername(dto.getUsername())
-                .orElseThrow(() -> new BadCredentialsException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> {
+                    // [로그인 실패 로그 1: 사용자 없음]
+                    log.warn("Login Failed: User not found - Username={}", dto.getUsername());
+                    return new BadCredentialsException("존재하지 않는 사용자입니다.");
+                });
 
         // 계정 상태 확인
         switch (user.getStatus()) {
-            case INACTIVE, SUSPENDED, DELETED, PENDING, BLOCKED ->
-                    throw new IllegalStateException("로그인할 수 없는 계정 상태입니다: " + user.getStatus());
+            case INACTIVE, SUSPENDED, DELETED, PENDING, BLOCKED -> { // 로그 추가를 위해 {} 블록으로 변경
+                // [로그인 실패 로그 2: 계정 상태 문제]
+                log.warn("Login Failed: Account status is invalid - Username={}, Status={}", user.getUsername(), user.getStatus());
+                throw new IllegalStateException("로그인할 수 없는 계정 상태입니다: " + user.getStatus());
+            }
             case ACTIVE -> {
                 // 비밀번호 확인
                 if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+                    // [로그인 실패 로그 3: 비밀번호 불일치]
+                    log.warn("Login Failed: Password mismatch - Username={}", user.getUsername());
                     throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
                 }
 
@@ -50,6 +59,7 @@ public class LoginServiceImpl implements LoginService {
                 Map<String, Object> claims = Map.of("role", user.getRole().name());
                 String token = jwtTokenProvider.createToken(user.getEmail(), user.getRole().name(), user.getNickname(), user.getUsername(), claims);
 
+                // [로그인 성공 로그]
                 log.info("로그인 성공: email={}", user.getEmail());
 
                 // 응답 생성
