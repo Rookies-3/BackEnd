@@ -4,6 +4,7 @@ import com.store.rookiesoneteam.dto.UserDTO;
 import com.store.rookiesoneteam.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,14 +23,21 @@ public class UserController {
     @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자의 정보를 조회합니다.")
     @GetMapping("/me")
     public ResponseEntity<UserDTO.Response> getMyInfo(@AuthenticationPrincipal UserDetails userDetails) {
-        // Spring Security 컨텍스트에서 직접 사용자 이름을 가져와 조회하므로 안전합니다.
         UserDTO.Response userInfo = userService.findUser(userDetails.getUsername());
         return ResponseEntity.ok(userInfo);
     }
 
+    @Operation(summary = "내 정보 수정 (통합)", description = "현재 로그인한 사용자의 정보를 수정합니다. 현재 비밀번호는 필수이며, 변경할 필드만 선택적으로 포함하여 요청합니다.")
+    @PutMapping("/me")
+    public ResponseEntity<UserDTO.Response> updateMyInfo(@AuthenticationPrincipal UserDetails userDetails,
+                                                       @Valid @RequestBody UserDTO.MyInfoUpdateRequest updateRequest) {
+        UserDTO.Response updatedUser = userService.updateMyInfo(userDetails.getUsername(), updateRequest);
+        return ResponseEntity.ok(updatedUser);
+    }
+
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다. 가입 시 상태는 'ACTIVE'가 됩니다.")
     @PostMapping("/signup")
-    public ResponseEntity<UserDTO.Response> signupUser(@RequestBody UserDTO.Request userDTO) {
+    public ResponseEntity<UserDTO.Response> signupUser(@Valid @RequestBody UserDTO.Request userDTO) {
         return ResponseEntity.ok(userService.signup(userDTO));
     }
 

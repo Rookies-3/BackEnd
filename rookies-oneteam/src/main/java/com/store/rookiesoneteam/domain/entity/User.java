@@ -63,43 +63,14 @@ public class User implements UserDetails {
     private LocalDateTime updated;
 
     // === 비즈니스 로직 === //
-    public void approved() {
-        this.status = UserStatus.ACTIVE;
-        this.approvedAt = LocalDateTime.now();
-    }
-
-    public void rejected() {
-        this.status = UserStatus.SUSPENDED;
-        this.approvedAt = LocalDateTime.now();
-    }
-
-    public void deactivated() {
-        this.status = UserStatus.INACTIVE;
-        this.approvedAt = LocalDateTime.now();
-    }
-
     public void deleted() {
         this.status = UserStatus.DELETED;
-        this.approvedAt = LocalDateTime.now();
+        this.deleted = LocalDateTime.now();
     }
 
-    public void pending() {
-        this.status = UserStatus.PENDING;
-        this.approvedAt = LocalDateTime.now();
-    }
-
-    public void blocked() {
-        this.status = UserStatus.BLOCKED;
-        this.approvedAt = LocalDateTime.now();
-    }
-
-    public void updateLastLoginTime() {
-        this.lastLogin = LocalDateTime.now();
-    }
-
-    public void changeUsername(String newUsername) {
-        if (newUsername != null && !newUsername.isBlank()) {
-            this.username = newUsername;
+    public void changeName(String newName) {
+        if (newName != null && !newName.isBlank()) {
+            this.name = newName;
         }
     }
 
@@ -109,15 +80,38 @@ public class User implements UserDetails {
         }
     }
 
+    public void changeEmail(String newEmail) {
+        if (newEmail != null && !newEmail.isBlank()) {
+            this.email = newEmail;
+        }
+    }
+
+    public void changePhone(String newPhone) {
+        if (newPhone != null && !newPhone.isBlank()) {
+            this.phone = newPhone;
+        }
+    }
+
     public void changePassword(String newEncodedPassword) {
         this.password = newEncodedPassword;
     }
 
     // === UserDetails 구현 메소드 === //
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
     public boolean isEnabled() { return status == UserStatus.ACTIVE; }
+
+    // 사용하지 않는 UserDetails 메소드들
+    @Override
+    public boolean isAccountNonExpired() { return true; }
+
+    @Override
+    public boolean isAccountNonLocked() { return true; }
+
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
 }
