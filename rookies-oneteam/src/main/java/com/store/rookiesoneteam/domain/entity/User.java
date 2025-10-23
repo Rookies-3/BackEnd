@@ -62,12 +62,6 @@ public class User implements UserDetails {
     @LastModifiedDate
     private LocalDateTime updated;
 
-    // [추가] History 엔티티와의 1:N 관계 설정
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<History> history = List.of();
-
-
     // === 비즈니스 로직 === //
     public void approved() {
         this.status = UserStatus.ACTIVE;
@@ -120,34 +114,8 @@ public class User implements UserDetails {
     }
 
     // === UserDetails 구현 메소드 === //
-
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    }
-
-    @Override
-    public String getUsername() {
-        return this.username;
-    }
-
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return this.status != UserStatus.BLOCKED && this.status != UserStatus.SUSPENDED;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
     }
 
     @Override
