@@ -5,6 +5,8 @@ import com.store.rookiesoneteam.domain.entity.User;
 import com.store.rookiesoneteam.domain.enums.UserRole;
 import com.store.rookiesoneteam.domain.enums.UserStatus;
 import com.store.rookiesoneteam.dto.UserDTO;
+import com.store.rookiesoneteam.error.CustomException;
+import com.store.rookiesoneteam.error.ErrorCode;
 import com.store.rookiesoneteam.repository.UserRepository;
 import com.store.rookiesoneteam.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service("userServiceImpl")
 @RequiredArgsConstructor
@@ -24,6 +27,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+
+    private static final String PASSWORD_PATTERN = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
 
     @Override
     public Page<UserDTO.Response> findUsersByStatus(UserStatus status, Pageable pageable) {
@@ -48,7 +53,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserDTO.Response findUser(String username) {
         User user = userRepository.findByUsernameAndStatus(username, UserStatus.ACTIVE)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         return userMapper.toResponse(user);
     }
 
@@ -56,7 +61,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void withdraw(String username) {
         User user = userRepository.findByUsernameAndStatus(username, UserStatus.ACTIVE)
-                                  .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 이미 탈퇴한 사용자입니다."));
+                                  .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         user.deleted();
         log.info("회원탈퇴 처리 완료: username={}", user.getUsername());
     }
@@ -73,12 +78,25 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDTO.Response signup(UserDTO.Request request) {
-        if(userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+        // 비밀번호 형식 검사
+        String password = request.getPassword();
+        if (password == null || !Pattern.matches(PASSWORD_PATTERN, password)) {
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        if(userRepository.existsByNickname(request.getNickname())) {
-            throw new IllegalArgumentException("이미 존재하는 이름입니다.");
+        // 아이디(username) 중복 검사
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
+        }
+
+        // 이메일 중복 검사 추가
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // 닉네임 중복 검사
+        if (userRepository.existsByNickname(request.getNickname())) {
+            throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
 
         User user = userMapper.toEntity(request, passwordEncoder);

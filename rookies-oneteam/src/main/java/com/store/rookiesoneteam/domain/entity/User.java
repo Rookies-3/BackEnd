@@ -1,6 +1,5 @@
 package com.store.rookiesoneteam.domain.entity;
 
-import com.store.rookiesoneteam.domain.enums.SocialType;
 import com.store.rookiesoneteam.domain.enums.UserRole;
 import com.store.rookiesoneteam.domain.enums.UserStatus;
 import jakarta.persistence.*;
@@ -53,11 +52,6 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status;
-
-    @Enumerated(EnumType.STRING)
-    private SocialType socialType;
-
-    private String socialId;
 
     private LocalDateTime lastLogin;
     private LocalDateTime deleted;
