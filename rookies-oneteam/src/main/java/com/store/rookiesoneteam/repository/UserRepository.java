@@ -27,6 +27,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 아이디(username) 존재 여부 확인
     boolean existsByUsername(String username);
 
+    // 전화번호 존재 여부 확인
+    boolean existsByPhone(String phone);
+
     // 상태 별 유저의 이메일이나 이름으로 확인
     List<User> findByStatusAndUsernameOrEmail(UserStatus status, String username, String email);
 

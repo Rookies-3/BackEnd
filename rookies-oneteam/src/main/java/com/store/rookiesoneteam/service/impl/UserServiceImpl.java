@@ -2,7 +2,6 @@ package com.store.rookiesoneteam.service.impl;
 
 import com.store.rookiesoneteam.component.UserMapper;
 import com.store.rookiesoneteam.domain.entity.User;
-import com.store.rookiesoneteam.domain.enums.UserRole;
 import com.store.rookiesoneteam.domain.enums.UserStatus;
 import com.store.rookiesoneteam.dto.UserDTO;
 import com.store.rookiesoneteam.error.CustomException;
@@ -11,42 +10,52 @@ import com.store.rookiesoneteam.repository.UserRepository;
 import com.store.rookiesoneteam.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service("userServiceImpl")
 @RequiredArgsConstructor
 @Slf4j
-public class UserServiceImpl implements UserService {
+public class    UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    private static final String PASSWORD_PATTERN = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
-
     @Override
-    public Page<UserDTO.Response> findUsersByStatus(UserStatus status, Pageable pageable) {
-        return userRepository.findAllByStatus(status, pageable)
-                .map(userMapper::toResponse);
+    @Transactional
+    public UserDTO.Response updateMyInfo(String username, UserDTO.MyInfoUpdateRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 1. 현재 비밀번호 확인
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new CustomException(ErrorCode.INCORRECT_PASSWORD);
+        }
+
+        // 2. 각 필드 업데이트 (중복 검사 포함)
+        updateField(request.getName(), user::changeName);
+        updatePasswordField(request.getNewPassword(), user);
+        updateUniqueField(request.getNickname(), user.getNickname(), userRepository::existsByNickname, ErrorCode.DUPLICATE_NICKNAME, user::changeNickname);
+        updateUniqueField(request.getEmail(), user.getEmail(), userRepository::existsByEmail, ErrorCode.DUPLICATE_EMAIL, user::changeEmail);
+        updateUniqueField(request.getPhone(), user.getPhone(), userRepository::existsByPhone, ErrorCode.DUPLICATE_PHONE, user::changePhone);
+
+        return userMapper.toResponse(user);
     }
 
     @Override
-    public Page<UserDTO.Response> findUsersByStatusAndRole(UserStatus status, UserRole role, Pageable pageable) {
-        return userRepository.findAllByStatusAndRole(status, role, pageable)
-                .map(userMapper::toResponse);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<UserDTO.Response> findAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable)
-                .map(userMapper::toResponse);
+    @Transactional
+    public void signup(UserDTO.Request request) {
+        validateSignupRequest(request);
+        User user = userMapper.toEntity(request);
+        userRepository.save(user);
     }
 
     @Override
@@ -61,47 +70,63 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void withdraw(String username) {
         User user = userRepository.findByUsernameAndStatus(username, UserStatus.ACTIVE)
-                                  .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         user.deleted();
         log.info("회원탈퇴 처리 완료: username={}", user.getUsername());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserDTO.UpdateRequest> getAllUsers() {
-
+    public List<UserDTO.AdminResponse> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(UserMapper::toUpdateRequest)
-                .toList();
+                .map(userMapper::toAdminResponse)
+                .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional
-    public UserDTO.Response signup(UserDTO.Request request) {
-        // 비밀번호 형식 검사
-        String password = request.getPassword();
-        if (password == null || !Pattern.matches(PASSWORD_PATTERN, password)) {
-            throw new CustomException(ErrorCode.INVALID_PASSWORD);
-        }
+    // --- Private Helper Methods ---
 
-        // 아이디(username) 중복 검사
+    /**
+     * 단순 필드 업데이트를 위한 헬퍼 메소드
+     */
+    private void updateField(String value, Consumer<String> updater) {
+        if (StringUtils.hasText(value)) {
+            updater.accept(value);
+        }
+    }
+
+    /**
+     * 비밀번호 필드 업데이트를 위한 헬퍼 메소드
+     */
+    private void updatePasswordField(String newPassword, User user) {
+        if (StringUtils.hasText(newPassword)) {
+            user.changePassword(passwordEncoder.encode(newPassword));
+        }
+    }
+
+    /**
+     * 고유 값(Unique) 필드 업데이트를 위한 헬퍼 메소드 (중복 검사 포함)
+     */
+    private <T> void updateUniqueField(T newValue, T currentValue, Predicate<T> existsCheck, ErrorCode errorCode, Consumer<T> updater) {
+        if (newValue != null && !Objects.equals(currentValue, newValue)) {
+            if (existsCheck.test(newValue)) {
+                throw new CustomException(errorCode);
+            }
+            updater.accept(newValue);
+        }
+    }
+
+    /**
+     * 회원가입 요청 데이터의 유효성을 검사하는 헬퍼 메소드
+     */
+    private void validateSignupRequest(UserDTO.Request request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
         }
-
-        // 이메일 중복 검사 추가
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
-
-        // 닉네임 중복 검사
         if (userRepository.existsByNickname(request.getNickname())) {
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
-
-        User user = userMapper.toEntity(request, passwordEncoder);
-        User saved = userRepository.save(user);
-
-        return userMapper.toResponse(saved);
     }
 }
