@@ -8,10 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 public class UserDTO {
-    // === 회원가입 === //
+    // === 회원가입 용 === //
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -68,44 +66,23 @@ public class UserDTO {
         private String phone;
     }
 
-    // === 관리자용 유저 정보 수정 (참고용) === //
+    // === 관리자용 유저 정보 조회 === //
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class UpdateRequest {
-        @NotNull
+    public static class AdminResponse {
         private Long id;
-
-        @NotBlank
-        @Size(max = 50)
         private String username;
-
-        @NotBlank
-        @Size(max = 50)
         private String name;
-
-        @NotBlank
-        @Pattern(regexp = "^\\d{10,11}$", message = "전화번호는 10~11자리 숫자여야 합니다.")
         private String phone;
-
-        @NotBlank
-        @Size(max = 50)
         private String nickname;
-
-        @NotBlank
-        @Email
-        @Size(max = 100)
         private String email;
-
-        @NotNull
         private UserRole role;
-
-        @NotNull
         private UserStatus status;
     }
 
-    // === 사용자 응답 DTO === //
+    // === 일반 사용자 응답 DTO === //
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

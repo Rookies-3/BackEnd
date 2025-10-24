@@ -37,8 +37,9 @@ public class UserController {
 
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다. 가입 시 상태는 'ACTIVE'가 됩니다.")
     @PostMapping("/signup")
-    public ResponseEntity<UserDTO.Response> signupUser(@Valid @RequestBody UserDTO.Request userDTO) {
-        return ResponseEntity.ok(userService.signup(userDTO));
+    public ResponseEntity<String> signupUser(@Valid @RequestBody UserDTO.Request userDTO) {
+        userService.signup(userDTO);
+        return ResponseEntity.ok("회원가입이 성공적으로 완료되었습니다.");
     }
 
     @Operation(summary = "회원탈퇴", description = "회원탈퇴를 진행합니다. 탈퇴 시 상태는 'DELETED'가 됩니다.")
@@ -49,10 +50,10 @@ public class UserController {
     }
 
     // --- 관리자용 API 예시 (참고용으로 남겨둠) ---
-    @Operation(summary = "모든 유저 검색 (관리자용)", description = "상태가 'ACTIVE'인 전체 사용자를 조회합니다.")
+    @Operation(summary = "모든 유저 검색 (관리자용)", description = "전체 사용자를 조회합니다.")
     @GetMapping("/all")
-    public ResponseEntity<List<UserDTO.UpdateRequest>> getAllUsers() {
-        List<UserDTO.UpdateRequest> users = userService.getAllUsers();
+    public ResponseEntity<List<UserDTO.AdminResponse>> getAllUsers() {
+        List<UserDTO.AdminResponse> users = userService.getAllUsers();
         return ResponseEntity.ok().body(users);
     }
 
