@@ -29,6 +29,7 @@ public class ChatMessage {
     @Column(nullable = false)
     private String sender;
 
+    @Lob
     @Column(nullable = false)
     private String message;
 

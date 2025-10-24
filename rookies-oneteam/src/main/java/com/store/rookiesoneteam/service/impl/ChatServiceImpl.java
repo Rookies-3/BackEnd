@@ -72,7 +72,7 @@ public class ChatServiceImpl implements ChatService {
                 .build();
         chatMessageRepository.save(userMessage);
 
-        // ⭐️ 2. 제목 변경이 있었다면 웹소켓으로 알림 전송
+        // 제목 변경이 있었다면 웹소켓으로 알림 전송
         if (isRoomNameUpdated) {
             ChatRoomDto.Response roomUpdateDto = ChatRoomDto.Response.fromEntity(chatRoom);
             // 모든 클라이언트의 채팅방 목록 업데이트를 위한 공통 토픽으로 전송
@@ -82,7 +82,7 @@ public class ChatServiceImpl implements ChatService {
         }
 
         // 3. AI의 응답을 비동기적으로 요청하고, 응답이 오면 후속 작업을 처리합니다.
-        aiService.getAIResponse(messageDto.getMessage())
+        aiService.getAIResponse(messageDto)
                 .thenAcceptAsync(aiResponse -> {
                     log.info("AI response received for room: {}. Sending to subscribers.", messageDto.getRoomId());
                     // 4. AI의 응답 메시지를 생성하고 DB에 저장합니다.
