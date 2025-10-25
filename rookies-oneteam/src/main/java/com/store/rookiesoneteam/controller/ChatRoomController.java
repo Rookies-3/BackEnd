@@ -4,6 +4,7 @@ import com.store.rookiesoneteam.dto.ChatMessageDto;
 import com.store.rookiesoneteam.dto.ChatRoomDto;
 import com.store.rookiesoneteam.service.ChatService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,12 +15,15 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
+@Slf4j
 public class ChatRoomController {
 
     private final ChatService chatService;
 
     @PostMapping("/room")
-    public ResponseEntity<ChatRoomDto.Response> createRoom(@RequestBody(required = false) ChatRoomDto.Request requestDto, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ChatRoomDto.Response> createRoom(@RequestBody ChatRoomDto.Request requestDto, @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("roomName={}, roomType={}", requestDto.getRoomName(), requestDto.getRoomType());
+
         ChatRoomDto.Response createdRoom = chatService.createRoom(requestDto, userDetails.getUsername());
         return ResponseEntity.ok(createdRoom);
     }

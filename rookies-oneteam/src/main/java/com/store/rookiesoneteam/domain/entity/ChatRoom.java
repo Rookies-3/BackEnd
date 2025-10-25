@@ -1,5 +1,6 @@
 package com.store.rookiesoneteam.domain.entity;
 
+import com.store.rookiesoneteam.domain.enums.MessageType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -36,13 +37,18 @@ public class ChatRoom {
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatMessage> messages = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MessageType roomType;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
     @Builder
-    public ChatRoom(User user, String roomName) {
+    public ChatRoom(User user, String roomName,  MessageType roomType) {
         this.user = user;
         this.roomName = roomName;
+        this.roomType = roomType;
     }
 }

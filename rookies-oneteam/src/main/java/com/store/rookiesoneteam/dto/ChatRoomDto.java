@@ -1,6 +1,7 @@
 package com.store.rookiesoneteam.dto;
 
 import com.store.rookiesoneteam.domain.entity.ChatRoom;
+import com.store.rookiesoneteam.domain.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +17,7 @@ public class ChatRoomDto {
     @AllArgsConstructor
     public static class Request {
         private String roomName;
+        private MessageType roomType;
     }
 
     // 클라이언트에게 전달할 응답 DTO
@@ -25,12 +27,14 @@ public class ChatRoomDto {
         private Long roomId;
         private String roomName;
         private LocalDateTime createdAt;
+        private MessageType roomType;
 
         // Entity를 DTO로 변환하는 정적 메소드
         public static Response fromEntity(ChatRoom chatRoom) {
             return Response.builder()
                     .roomId(chatRoom.getId())
                     .roomName(chatRoom.getRoomName())
+                    .roomType(chatRoom.getRoomType())
                     .createdAt(chatRoom.getCreatedAt())
                     .build();
         }

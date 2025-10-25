@@ -16,12 +16,13 @@ public class ChatController {
 
     @MessageMapping("/chat/message")
     public void message(ChatMessageDto message) {
-        // 사용자가 입장했을 때의 알림 메시지 처리
-        if (ChatMessageDto.MessageType.ENTER.equals(message.getType())) {
-            message.setMessage(message.getSender() + "님이 입장하셨습니다.");
-            messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
-            return; // 입장 메시지는 저장하지 않고 알리기만 함
-        }
+//        // 사용자가 입장했을 때의 알림 메시지 처리
+//        if (MessageType.ENTER.equals(message.getType())) {
+//            message.setMessage(message.getSender() + "님이 입장하셨습니다.");
+//            messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
+//            return; // 입장 메시지는 저장하지 않고 알리기만 함
+//        }
+// 백두현: 방 입장에 따른 처리는 현 시스템에 필요하지 않기에 주석처리함.
 
         // 사용자의 일반 대화 메시지 처리
         // 1. 메시지를 DB에 저장하고 AI 응답을 요청하는 서비스를 호출

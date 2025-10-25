@@ -1,5 +1,6 @@
 package com.store.rookiesoneteam.dto;
 
+import com.store.rookiesoneteam.domain.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,12 +13,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatMessageDto {
-
-    // 메시지 유형: 입장(ENTER), 대화(TALK)
-    public enum MessageType {
-        ENTER, TALK
-    }
-
     private MessageType type;
     private Long roomId;      // 방 번호
     private String sender;    // 보낸 사람
