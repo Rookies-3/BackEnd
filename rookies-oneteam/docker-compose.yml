@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rookies-oneteam-app
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=rookies_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=1031
+      - DDL_AUTO=update
+    depends_on:
+      - db
+    networks:
+      - rookies-network
+
+  db:
+    image: mariadb:10.11
+    container_name: rookies-oneteam-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=1031
+      - MYSQL_DATABASE=rookies_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - rookies-network
+
+volumes:
+  mariadb-data:
+
+networks:
+  rookies-network:
+    driver: bridge
