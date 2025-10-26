@@ -31,17 +31,21 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + validityInMilliseconds);
 
         // Claims 생성
-        Claims claims = Jwts.claims().setSubject(email); // 사용자 식별자: email
+        var claimsBuilder = Jwts.claims().subject(email); // 사용자 식별자: email
 
         // 추가 클레임이 있다면 합치기
         if (!extraClaims.isEmpty()) {
-            claims.putAll(extraClaims);
+            for (Map.Entry<String, Object> entry : extraClaims.entrySet()) {
+                claimsBuilder.add(entry.getKey(), entry.getValue());
+            }
         }
 
-        claims.put("role", "ROLE_" + role);
-        claims.put("nickname", nickname);
-        claims.put("username", username);
-        claims.put("type", "access_token");
+        Claims claims = claimsBuilder
+                .add("role", "ROLE_" + role)
+                .add("nickname", nickname)
+                .add("username", username)
+                .add("type", "access_token")
+                .build();
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -55,12 +59,16 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + resetTokenValidity); // 30분 유효
 
-        Claims claims = Jwts.claims().setSubject(email);
-        claims.put("type", "reset_token");
+        var claimsBuilder = Jwts.claims().subject(email);
+        claimsBuilder.add("type", "reset_token");
 
         if (extraClaims != null && !extraClaims.isEmpty()) {
-            claims.putAll(extraClaims);
+            for (Map.Entry<String, Object> entry : extraClaims.entrySet()) {
+                claimsBuilder.add(entry.getKey(), entry.getValue());
+            }
         }
+
+        Claims claims = claimsBuilder.build();
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -73,11 +81,11 @@ public class JwtTokenProvider {
 
     // 토큰에서 Claims 전체 추출
     private Claims getClaimsFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
+        return Jwts.parser()
+                .verifyWith(key)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     // 토큰에서 이메일(subject) 추출
@@ -103,10 +111,10 @@ public class JwtTokenProvider {
     // 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(key)          // 서명 검증용 키 설정
+            Jwts.parser()
+                    .verifyWith(key)          // 서명 검증용 키 설정
                     .build()
-                    .parseClaimsJws(token);      // 파싱 시 예외 발생 여부로 유효성 판단
+                    .parseSignedClaims(token);      // 파싱 시 예외 발생 여부로 유효성 판단
             return true;
         } catch (Exception e) {
             return false;                        // 서명 불일치, 만료 등 예외 발생 시 false
