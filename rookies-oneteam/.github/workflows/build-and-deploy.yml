@@ -29,23 +29,23 @@ jobs:
         distribution: 'temurin'
     
     - name: Grant execute permission for gradlew
-      run: chmod +x rookies-oneteam/gradlew
+      run: chmod +x rookies-oneteam/rookies-oneteam/gradlew
     
     - name: Build with Gradle
       run: |
-        cd rookies-oneteam
+        cd rookies-oneteam/rookies-oneteam
         ./gradlew clean build
     
     - name: List build outputs
       run: |
-        cd rookies-oneteam
+        cd rookies-oneteam/rookies-oneteam
         ls -lh build/libs/
     
     - name: Upload JAR artifact
       uses: actions/upload-artifact@v4
       with:
         name: rookies-oneteam-jar
-        path: rookies-oneteam/build/libs/*.jar
+        path: rookies-oneteam/rookies-oneteam/build/libs/*.jar
         retention-days: 7
     
     - name: Set up Docker Buildx
@@ -70,7 +70,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./rookies-oneteam
+        context: ./rookies-oneteam/rookies-oneteam
         file: Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
