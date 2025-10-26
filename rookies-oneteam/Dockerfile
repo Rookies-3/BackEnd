@@ -1,25 +1,10 @@
-# Multi-stage build for Spring Boot application
-FROM gradle:8-jdk17-alpine AS build
-
-WORKDIR /app
-
-# Copy gradle files
-COPY build.gradle settings.gradle ./
-COPY gradle ./gradle
-
-# Copy all source files
-COPY src ./src
-
-# Build the application
-RUN gradle build -x test
-
-# Runtime stage
+# Use OpenJDK 17 for running the pre-built JAR
 FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-# Copy the built jar from build stage
-COPY --from=build /app/build/libs/*.jar app.jar
+# Copy the pre-built JAR file
+COPY rookies-oneteam/build/libs/RookiesOneteam-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the application port
 EXPOSE 8080

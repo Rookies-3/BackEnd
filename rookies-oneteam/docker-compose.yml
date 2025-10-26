@@ -16,28 +16,49 @@ services:
       - DB_PORT=3306
       - DB_NAME=rookies_db
       - DB_USERNAME=root
-      - DB_PASSWORD=1031
+      - DB_PASSWORD=${DB_PASSWORD:-1031}
       - DDL_AUTO=update
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - SERVER_PORT=8080
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - rookies-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   db:
     image: mariadb:10.11
     container_name: rookies-oneteam-db
     environment:
-      - MYSQL_ROOT_PASSWORD=1031
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-1031}
       - MYSQL_DATABASE=rookies_db
+      - MYSQL_USER=rookies_user
+      - MYSQL_PASSWORD=${DB_PASSWORD:-1031}
     ports:
       - "3306:3306"
     volumes:
       - mariadb-data:/var/lib/mysql
     networks:
       - rookies-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   mariadb-data:
+    driver: local
 
 networks:
   rookies-network:
