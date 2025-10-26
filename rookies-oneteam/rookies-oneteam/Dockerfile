@@ -4,7 +4,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the pre-built JAR file
-COPY build/libs/*.jar app.jar
+COPY rookies-oneteam/build/libs/*.jar app.jar
 
 # Expose the application port
 EXPOSE 8080
