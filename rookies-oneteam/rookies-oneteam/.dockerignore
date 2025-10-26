@@ -1,0 +1,15 @@
+**/.gradle/
+**/bin/
+**/.idea/
+**/.git/
+**/.gitignore
+**/*.md
+**/gradlew*
+**/gradle/wrapper/
+**/.env
+**/HELP.md
+**/node_modules/
+**/.DS_Store
+**/src/
+**/test/
+
