@@ -80,16 +80,16 @@ jobs:
     - name: Verify files before Docker build
       run: |
         echo "Dockerfile location:"
-        ls -la rookies-oneteam/Dockerfile
+        ls -la rookies-oneteam/rookies-oneteam/Dockerfile
         echo "JAR files location:"
-        ls -lh rookies-oneteam/build/libs/*.jar
+        ls -lh rookies-oneteam/rookies-oneteam/build/libs/*.jar
         echo "Build context:"
         pwd
     
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: rookies-oneteam
+        context: rookies-oneteam/rookies-oneteam
         file: Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
